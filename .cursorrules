@@ -1,0 +1,24 @@
+所有 Git commit message 必须使用简体中文。
+
+提交信息尽量简短、明确，优先使用 Conventional Commits 格式：
+
+- feat: 添加新功能
+- fix: 修复问题
+- docs: 更新文档
+- chore: 调整工程配置
+- refactor: 重构代码
+- style: 调整样式
+
+示例：
+
+- docs: 重写 README，补充项目说明和开发流程
+- feat: 添加侧边栏页面入口
+- fix: 修复侧边栏打开逻辑
+
+项目说明：
+
+- 这是一个基于 Extension.js 的浏览器扩展项目。
+- 主要开发入口是 src/sidebar/SidebarApp.js。
+- 保留打开浏览器侧边栏的基础能力。
+- 新页面逻辑优先写在 sidebar 目录下。
+- 不要提交 node_modules 或 dist 目录。
