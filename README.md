@@ -2,25 +2,32 @@
 
 # my-chrome
 
-> JavaScript-based extension with a sidebar panel. Adds a sidebar with a simple page.
+> 识别社交媒体里，目前支持电脑网页直登的抖音/小红书评论区里的无水印图片。
 
+这是一个基于 Extension.js 的浏览器扩展项目。当前保留了打开侧边栏的基础链路，侧边栏页面逻辑可以从 `src/sidebar/SidebarApp.js` 开始继续开发。
 
 ![screenshot](./public/screenshot.png)
+
 ## Commands
 
 ### dev
 
-Run the extension in development mode. Target a browser with `--browser`:
+启动开发模式，生成可热更新的 Chromium 开发目录：
 
 ```bash
+nvm use
 npm run dev
-npm run dev -- --browser=firefox
-npm run dev -- --browser=edge
+```
+
+然后在 Chrome 的 `chrome://extensions/` 中手动加载：
+
+```text
+dist/chromium
 ```
 
 ### build
 
-Build for production. Convenience scripts target each browser:
+构建生产版本：
 
 ```bash
 npm run build           # Chrome (default)
