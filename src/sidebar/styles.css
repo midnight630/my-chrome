@@ -1,0 +1,23 @@
+:root {
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #111827;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  min-height: 100vh;
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+}
+
+.sidebar_app {
+  min-height: 100vh;
+  width: 100%;
+}
