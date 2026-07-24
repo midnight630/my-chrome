@@ -8,9 +8,47 @@
 </head>
 
 <body>
-  <noscript>You need to enable JavaScript to run this extension.</noscript>
-  <div id="root"></div>
+  <noscript>您需要启用 JavaScript 才能运行该扩展程序。</noscript>
+  <main id="root" class="sidebar_app">
+    <!-- <header class="sidebar_header">
+      <h1>识趣图片</h1>
+    </header> -->
+
+    <section class="toolbar" aria-label="图片查找操作">
+      <button class="tool_button" type="button" data-action="scan">
+        查找图片
+      </button>
+      <button class="tool_button" type="button" data-action="pick">
+        指点图片
+      </button>
+    </section>
+
+    <section id="status_text" class="status_bar" aria-live="polite">准备查找评论区图片</section>
+
+    <section class="selection_bar">
+      <span id="selection_count">0 / 0 已选择</span>
+      <div>
+        <button id="select_all_button" type="button" data-action="select-all">全选</button>
+        <button type="button" data-action="clear">清空</button>
+      </div>
+    </section>
+
+    <section id="image_list" class="image_list" aria-label="图片结果">
+      <div class="empty_state">
+        点击“查找图片”扫描当前页面，或点击“指点图片”后到页面上点选图片区域。
+      </div>
+    </section>
+
+    <footer class="download_bar">
+      <button class="secondary_button" type="button" data-action="scroll-top">
+        滚动到顶部
+      </button>
+      <button class="download_button" type="button" data-action="download">
+        下载选中
+      </button>
+    </footer>
+  </main>
+  <script src="./scripts.js"></script>
 </body>
-<script src="./scripts.js"></script>
 
 </html>

@@ -14,10 +14,10 @@
     "url": "https://yourwebsite.com"
   },
   "scripts": {
-    "dev": "extension dev --chromium-binary \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --port 3100 --no-browser --allow-control --logs info --log-context all",
+    "dev": "extension dev --chromium-binary \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --port 3100 --no-browser",
     "dev:auto": "extension dev --browser chrome --port 3100 --profile ./dist/extension-profile-chrome --allow-control --logs info --log-context all",
     "dev:system": "extension dev --chromium-binary \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --port 3100 --profile ./dist/extension-profile-chromium --allow-control --logs info --log-context all",
-    "dev:no-browser": "extension dev --chromium-binary \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --port 3100 --no-browser --allow-control",
+    "dev:no-browser": "extension dev --chromium-binary \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --port 3100 --no-browser",
     "dev:install-browser": "extension install chrome",
     "reload": "extension reload --browser chromium",
     "reload:auto": "extension reload --browser chrome",

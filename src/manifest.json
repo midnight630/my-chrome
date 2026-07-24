@@ -47,7 +47,7 @@
     "default_panel": "sidebar/index.html",
     "default_title": "Side Panel Content"
   },
-  "chromium:permissions": ["sidePanel"],
+  "chromium:permissions": ["sidePanel", "tabs", "downloads"],
   "background": {
     "chromium:service_worker": "background.js",
     "firefox:scripts": ["background.js"]

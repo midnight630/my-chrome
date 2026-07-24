@@ -9,8 +9,6 @@ renderSidebar()
 
 if (import.meta.webpackHot) {
   import.meta.webpackHot.accept('./SidebarApp.js', () => {
-    const root = document.getElementById('root')
-    if (root) root.innerHTML = ''
-    renderSidebar()
+    window.location.reload()
   })
 }

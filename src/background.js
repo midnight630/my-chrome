@@ -2,14 +2,12 @@ const isFirefoxLike =
   import.meta.env.EXTENSION_PUBLIC_BROWSER === 'firefox' ||
   import.meta.env.EXTENSION_PUBLIC_BROWSER === 'gecko-based'
 
-// Firefox 使用 browserAction/sidebarAction API，和 Chromium 的 sidePanel API 不同。
 if (isFirefoxLike) {
-  // 点击浏览器工具栏图标时，直接打开 Firefox 侧边栏。
+  // Firefox 使用 browserAction/sidebarAction API，和 Chromium 的 sidePanel API 不同。
   browser.browserAction.onClicked.addListener(() => {
     browser.sidebarAction.open()
   })
 
-  // content script 会发送 openSidebar 消息，用来从页面按钮打开侧边栏。
   browser.runtime.onMessage.addListener((message) => {
     if (!message || message.type !== 'openSidebar') return
 
@@ -23,14 +21,27 @@ if (!isFirefoxLike) {
   chrome.sidePanel.setPanelBehavior({openPanelOnActionClick: true})
 }
 
-// Chromium 分支：接收页面按钮发来的消息，并打开当前标签页对应的 side panel。
-chrome.runtime.onMessage.addListener((message) => {
-  if (!message || message.type !== 'openSidebar') return
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (!message || !message.type) return
 
-  // 确保工具栏图标点击也能打开侧边栏。
+  if (message.type === 'openSidebar') {
+    openChromiumSidebar()
+    return
+  }
+
+  if (message.type === 'downloadImages') {
+    downloadImages(message.images || [])
+      .then((count) => sendResponse({ok: true, count}))
+      .catch((error) => sendResponse({ok: false, error: error.message}))
+    return true
+  }
+})
+
+function openChromiumSidebar() {
+  if (isFirefoxLike) return
+
   chrome.sidePanel.setPanelBehavior({openPanelOnActionClick: true})
 
-  // 旧版 Chromium 可能没有 open 方法，避免直接调用报错。
   if (!chrome.sidePanel.open) return
 
   chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
@@ -44,4 +55,44 @@ chrome.runtime.onMessage.addListener((message) => {
       console.error(error)
     }
   })
-})
+}
+
+async function downloadImages(images) {
+  if (!chrome.downloads?.download) {
+    throw new Error('当前浏览器不支持 downloads API')
+  }
+
+  const validImages = images.filter((image) => image?.url)
+
+  for (const [index, image] of validImages.entries()) {
+    await chrome.downloads.download({
+      url: image.url,
+      filename: createImageFilename(image, index),
+      saveAs: false
+    })
+  }
+
+  return validImages.length
+}
+
+function createImageFilename(image, index) {
+  let extension = image.url.match(/\.(avif|gif|jpe?g|png|webp)(?:[?#]|$)/i)?.[1]
+
+  if (extension) {
+    extension = `.${extension.toLowerCase()}`
+  }
+
+  if (!extension) {
+    try {
+      const url = new URL(image.url)
+      const pathnameName = decodeURIComponent(url.pathname.split('/').pop() || '')
+      extension = pathnameName.match(/\.(avif|gif|jpe?g|png|webp)$/i)?.[0]
+    } catch (_error) {
+      extension = ''
+    }
+  }
+
+  const suffix = extension || '.jpg'
+
+  return `shiqu-images/${String(index + 1).padStart(3, '0')}${suffix}`
+}
