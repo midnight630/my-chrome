@@ -146,3 +146,26 @@ src/background.js
 - `dist/chromium` 是开发模式常用加载目录。
 - `dist/chrome` 是 Chrome 生产构建目录，不适合用来观察热更新。
 - `node_modules` 和 `dist` 已在 `.gitignore` 中忽略，不需要提交。
+
+## 发给别人使用
+
+不通过 Chrome Web Store 发布时，可以把生产构建目录发给别人，让对方手动加载。
+
+先构建 Chrome 版本：
+
+```bash
+npm run build:chrome
+```
+
+然后把下面这个目录压缩后发给对方：
+
+```text
+dist/chrome
+```
+
+对方安装方式：
+
+1. 打开 Chrome，进入 `chrome://extensions/`
+2. 右上角打开“开发者模式”
+3. 点击“加载已解压的扩展程序”
+4. 选择解压后的 `dist/chrome` 文件夹
