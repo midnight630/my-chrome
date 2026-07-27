@@ -2,6 +2,7 @@ const state = {
   images: [],
   selectedUrls: new Set(),
   status: '准备查找评论区图片',
+  statusTone: 'info',
   activeAction: '',
   busy: false,
   picking: false
@@ -28,6 +29,7 @@ function renderStatus() {
   if (!statusText) return
 
   statusText.textContent = state.status
+  statusText.dataset.tone = state.statusTone
 }
 
 function renderSelectionCount() {
@@ -146,13 +148,13 @@ async function startImagePick() {
   state.activeAction = 'pick'
   state.picking = true
   state.busy = false
-  updateStatus('请到页面上点击图片所在位置；也可以直接点击“查找图片”取消点选并扫描。')
+  updateStatus('请到页面上点击图片所在位置；也可以直接点击“查找图片”取消点选并扫描。', 'info')
 
   try {
     const response = await sendActiveTabMessage({type: 'startImagePick'})
     applyImages(response.images || [], '已读取点选位置附近的 DOM 图片')
   } catch (error) {
-    updateStatus(error.message || '点选失败')
+    updateStatus(error.message || '点选失败', 'error')
   } finally {
     state.picking = false
     render()
@@ -162,7 +164,7 @@ async function startImagePick() {
 async function downloadSelectedImages() {
   const selectedImages = state.images.filter((image) => state.selectedUrls.has(image.url))
   if (!selectedImages.length) {
-    updateStatus('请先选择要下载的图片')
+    updateStatus('请先选择要下载的图片', 'error')
     return
   }
 
@@ -176,25 +178,25 @@ async function downloadSelectedImages() {
       throw new Error(response?.error || '下载失败')
     }
 
-    updateStatus(`已开始下载 ${response.count} 张图片`)
+    updateStatus(`已开始下载 ${response.count} 张图片`, 'success')
   })
 }
 
 function selectAllImages() {
   if (state.images.length && state.selectedUrls.size === state.images.length) {
     state.selectedUrls.clear()
-    updateStatus('已取消全选')
+    updateStatus('已取消全选', 'info')
     return
   }
 
   state.images.forEach((image) => state.selectedUrls.add(image.url))
-  updateStatus(`已选择 ${state.selectedUrls.size} 张图片`)
+  updateStatus(`已选择 ${state.selectedUrls.size} 张图片`, 'success')
 }
 
 function clearImages() {
   state.images = []
   state.selectedUrls.clear()
-  updateStatus('已清空图片结果')
+  updateStatus('已清空图片结果', 'info')
 }
 
 function scrollToTop() {
@@ -223,12 +225,12 @@ async function cancelImagePickIfNeeded() {
 
 async function runImageTask(status, task) {
   state.busy = true
-  updateStatus(status)
+  updateStatus(status, 'info')
 
   try {
     await task()
   } catch (error) {
-    updateStatus(error.message || '操作失败')
+    updateStatus(error.message || '操作失败', 'error')
   } finally {
     state.busy = false
     state.picking = false
@@ -239,11 +241,12 @@ async function runImageTask(status, task) {
 function applyImages(images, status) {
   state.images = images
   state.selectedUrls.clear()
-  updateStatus(`${status}，找到 ${images.length} 张图片`)
+  updateStatus(`${status}，找到 ${images.length} 张图片`, 'success')
 }
 
-function updateStatus(status) {
+function updateStatus(status, tone = 'info') {
   state.status = status
+  state.statusTone = tone
   render()
 }
 

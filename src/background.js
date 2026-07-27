@@ -7,12 +7,6 @@ if (isFirefoxLike) {
   browser.browserAction.onClicked.addListener(() => {
     browser.sidebarAction.open()
   })
-
-  browser.runtime.onMessage.addListener((message) => {
-    if (!message || message.type !== 'openSidebar') return
-
-    browser.sidebarAction.open()
-  })
 }
 
 if (!isFirefoxLike) {
@@ -24,11 +18,6 @@ if (!isFirefoxLike) {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || !message.type) return
 
-  if (message.type === 'openSidebar') {
-    openChromiumSidebar()
-    return
-  }
-
   if (message.type === 'downloadImages') {
     downloadImages(message.images || [])
       .then((count) => sendResponse({ok: true, count}))
@@ -36,26 +25,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true
   }
 })
-
-function openChromiumSidebar() {
-  if (isFirefoxLike) return
-
-  chrome.sidePanel.setPanelBehavior({openPanelOnActionClick: true})
-
-  if (!chrome.sidePanel.open) return
-
-  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-    const activeTabId = tabs?.[0]?.id
-    if (!activeTabId) return
-
-    try {
-      // sidePanel.open 需要指定 tabId，表示打开当前活动标签页的侧边栏。
-      chrome.sidePanel.open({tabId: activeTabId})
-    } catch (error) {
-      console.error(error)
-    }
-  })
-}
 
 async function downloadImages(images) {
   if (!chrome.downloads?.download) {
