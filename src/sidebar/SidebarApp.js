@@ -5,7 +5,8 @@ const state = {
   statusTone: 'info',
   activeAction: '',
   busy: false,
-  picking: false
+  picking: false,
+  recognitionEnabled: localStorage.getItem('recognitionEnabled') !== 'false'
 }
 
 const MAX_RENDERED_IMAGES = 160
@@ -20,6 +21,7 @@ function render() {
   renderSelectionCount()
   renderSelectionAction()
   renderImageList()
+  renderRecognitionToggle()
   renderActiveAction()
   syncDisabledState()
 }
@@ -51,6 +53,15 @@ function renderSelectionAction() {
 function renderImageList() {
   const imageList = document.getElementById('image_list')
   if (!imageList) return
+
+  if (!state.recognitionEnabled) {
+    imageList.innerHTML = `
+      <div class="empty_state">
+        识别已关闭。点击“开启识别”后再扫描页面图片。
+      </div>
+    `
+    return
+  }
 
   if (!state.images.length) {
     imageList.innerHTML = `
@@ -102,6 +113,7 @@ function bindStaticEvents() {
 
   document.querySelector('[data-action="scan"]')?.addEventListener('click', scanPageImages)
   document.querySelector('[data-action="pick"]')?.addEventListener('click', startImagePick)
+  document.querySelector('[data-action="toggle-recognition"]')?.addEventListener('click', toggleRecognition)
   document.querySelector('[data-action="select-all"]')?.addEventListener('click', selectAllImages)
   document.querySelector('[data-action="clear"]')?.addEventListener('click', clearImages)
   document.querySelector('[data-action="scroll-top"]')?.addEventListener('click', scrollToTop)
@@ -132,7 +144,17 @@ function renderActiveAction() {
   })
 }
 
+function renderRecognitionToggle() {
+  const button = document.getElementById('recognition_toggle')
+  if (!button) return
+
+  button.textContent = state.recognitionEnabled ? '关闭识别' : '开启识别'
+  button.classList.toggle('is_off', !state.recognitionEnabled)
+}
+
 async function scanPageImages() {
+  if (!ensureRecognitionEnabled()) return
+
   await cancelImagePickIfNeeded()
   state.activeAction = 'scan'
 
@@ -143,6 +165,8 @@ async function scanPageImages() {
 }
 
 async function startImagePick() {
+  if (!ensureRecognitionEnabled()) return
+
   await cancelImagePickIfNeeded()
 
   state.activeAction = 'pick'
@@ -162,6 +186,8 @@ async function startImagePick() {
 }
 
 async function downloadSelectedImages() {
+  if (!ensureRecognitionEnabled()) return
+
   const selectedImages = state.images.filter((image) => state.selectedUrls.has(image.url))
   if (!selectedImages.length) {
     updateStatus('请先选择要下载的图片', 'error')
@@ -197,6 +223,24 @@ function clearImages() {
   state.images = []
   state.selectedUrls.clear()
   updateStatus('已清空图片结果', 'info')
+}
+
+async function toggleRecognition() {
+  if (state.recognitionEnabled) {
+    await cancelImagePickIfNeeded()
+    state.recognitionEnabled = false
+    state.images = []
+    state.selectedUrls.clear()
+    state.activeAction = ''
+    state.busy = false
+    localStorage.setItem('recognitionEnabled', 'false')
+    updateStatus('识别已关闭，不会扫描任何页面', 'error')
+    return
+  }
+
+  state.recognitionEnabled = true
+  localStorage.setItem('recognitionEnabled', 'true')
+  updateStatus('识别已开启，可以查找当前页面图片', 'success')
 }
 
 function scrollToTop() {
@@ -250,6 +294,13 @@ function updateStatus(status, tone = 'info') {
   render()
 }
 
+function ensureRecognitionEnabled() {
+  if (state.recognitionEnabled) return true
+
+  updateStatus('识别已关闭，请先点击“开启识别”', 'error')
+  return false
+}
+
 async function sendActiveTabMessage(message) {
   const [tab] = await chrome.tabs.query({active: true, currentWindow: true})
   if (!tab?.id) throw new Error('没有找到当前活动页面')
@@ -275,12 +326,12 @@ function sendRuntimeMessage(message) {
 
 function syncDisabledState() {
   document.querySelectorAll('[data-action="scan"], [data-action="pick"]').forEach((button) => {
-    button.disabled = state.busy
+    button.disabled = state.busy || !state.recognitionEnabled
   })
 
   const downloadButton = document.querySelector('[data-action="download"]')
   if (downloadButton) {
-    downloadButton.disabled = !state.selectedUrls.size
+    downloadButton.disabled = !state.selectedUrls.size || !state.recognitionEnabled
   }
 }
 

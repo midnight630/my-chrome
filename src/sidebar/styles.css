@@ -61,7 +61,7 @@ button:disabled {
 
 .toolbar {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   background: var(--panel);
@@ -90,6 +90,22 @@ button:disabled {
   background: #dbeafe;
   border-color: #93c5fd;
   color: #1d4ed8;
+}
+
+.danger_button {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.danger_button:hover {
+  background: #fef2f2;
+}
+
+.danger_button.is_off {
+  color: #166534;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
 }
 
 .download_button {
