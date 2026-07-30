@@ -1,6 +1,7 @@
 const state = {
   images: [],
   selectedUrls: new Set(),
+  previewImageIndex: -1,
   status: '准备查找评论区图片',
   statusTone: 'info',
   activeAction: '',
@@ -21,6 +22,7 @@ function render() {
   renderSelectionCount()
   renderSelectionAction()
   renderImageList()
+  renderImagePreview()
   renderRecognitionToggle()
   renderActiveAction()
   syncDisabledState()
@@ -75,26 +77,33 @@ function renderImageList() {
   const visibleImages = state.images.slice(0, MAX_RENDERED_IMAGES)
   const hiddenCount = state.images.length - visibleImages.length
   const imageItems = visibleImages
-    .map((image) => {
+    .map((image, imageIndex) => {
       const checked = state.selectedUrls.has(image.url) ? 'checked' : ''
       const size = image.width && image.height ? `${image.width} x ${image.height}` : '未知尺寸'
 
       return `
-        <label class="image_item">
-          <input type="checkbox" data-url="${escapeAttribute(image.url)}" ${checked} />
+        <div class="image_item">
+          <input type="checkbox" aria-label="选择图片" data-url="${escapeAttribute(image.url)}" ${checked} />
           <span class="image_index">${image.index}</span>
-          <img
-            src="${escapeAttribute(image.url)}"
-            alt="${escapeAttribute(image.alt || '')}"
-            loading="lazy"
-            decoding="async"
-            referrerpolicy="no-referrer"
-          />
+          <button
+            class="image_preview_button"
+            type="button"
+            data-preview-index="${imageIndex}"
+            aria-label="查看大图"
+          >
+            <img
+              src="${escapeAttribute(image.url)}"
+              alt="${escapeAttribute(image.alt || '')}"
+              loading="lazy"
+              decoding="async"
+              referrerpolicy="no-referrer"
+            />
+          </button>
           <span class="image_meta">
             <strong>${escapeHtml(size)}</strong>
             <span>${escapeHtml(image.source === 'picked' ? '点选结构' : '页面扫描')}</span>
           </span>
-        </label>
+        </div>
       `
     })
     .join('')
@@ -118,6 +127,45 @@ function bindStaticEvents() {
   document.querySelector('[data-action="clear"]')?.addEventListener('click', clearImages)
   document.querySelector('[data-action="scroll-top"]')?.addEventListener('click', scrollToTop)
   document.querySelector('[data-action="download"]')?.addEventListener('click', downloadSelectedImages)
+
+  document.getElementById('image_preview')?.addEventListener('click', (event) => {
+    const target = event.target
+    if (!(target instanceof HTMLElement)) return
+    if (target.matches('[data-action="close-preview"]')) {
+      closeImagePreview()
+      return
+    }
+
+    if (target.matches('[data-action="previous-preview"]')) {
+      showPreviousPreviewImage()
+      return
+    }
+
+    if (target.matches('[data-action="next-preview"]')) {
+      showNextPreviewImage()
+      return
+    }
+
+    if (target.matches('[data-action="download-preview"]')) {
+      downloadPreviewImage()
+    }
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeImagePreview()
+      return
+    }
+
+    if (event.key === 'ArrowLeft') {
+      showPreviousPreviewImage()
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      showNextPreviewImage()
+    }
+  })
 }
 
 function bindImageSelectionEvents(imageList) {
@@ -134,6 +182,15 @@ function bindImageSelectionEvents(imageList) {
       renderSelectionCount()
       renderSelectionAction()
       syncDisabledState()
+    })
+  })
+
+  imageList.querySelectorAll('.image_preview_button').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.previewIndex)
+      if (!Number.isInteger(index)) return
+
+      openImagePreview(index)
     })
   })
 }
@@ -222,6 +279,7 @@ function selectAllImages() {
 function clearImages() {
   state.images = []
   state.selectedUrls.clear()
+  closeImagePreview()
   updateStatus('已清空图片结果', 'info')
 }
 
@@ -231,6 +289,7 @@ async function toggleRecognition() {
     state.recognitionEnabled = false
     state.images = []
     state.selectedUrls.clear()
+    closeImagePreview()
     state.activeAction = ''
     state.busy = false
     localStorage.setItem('recognitionEnabled', 'false')
@@ -285,7 +344,95 @@ async function runImageTask(status, task) {
 function applyImages(images, status) {
   state.images = images
   state.selectedUrls.clear()
+  closeImagePreview()
   updateStatus(`${status}，找到 ${images.length} 张图片`, 'success')
+}
+
+function openImagePreview(index) {
+  if (!state.images[index]) return
+
+  state.previewImageIndex = index
+  renderImagePreview()
+}
+
+function closeImagePreview() {
+  if (state.previewImageIndex < 0) return
+
+  state.previewImageIndex = -1
+  renderImagePreview()
+}
+
+function renderImagePreview() {
+  const overlay = document.getElementById('image_preview')
+  const image = document.getElementById('image_preview_img')
+  const caption = document.getElementById('image_preview_caption')
+  const counter = document.getElementById('image_preview_counter')
+  const previousButton = document.querySelector('[data-action="previous-preview"]')
+  const nextButton = document.querySelector('[data-action="next-preview"]')
+  const downloadButton = document.querySelector('[data-action="download-preview"]')
+  if (!overlay || !image || !caption || !counter) return
+
+  const previewImage = getPreviewImage()
+
+  if (!previewImage) {
+    overlay.hidden = true
+    image.removeAttribute('src')
+    image.alt = ''
+    caption.textContent = ''
+    counter.textContent = ''
+    if (previousButton) previousButton.disabled = true
+    if (nextButton) nextButton.disabled = true
+    if (downloadButton) downloadButton.disabled = true
+    return
+  }
+
+  overlay.hidden = false
+  image.src = previewImage.url
+  image.alt = previewImage.alt || ''
+  caption.textContent = previewImage.alt || previewImage.url
+  counter.textContent = `${state.previewImageIndex + 1} / ${state.images.length}`
+  if (previousButton) previousButton.disabled = state.images.length < 2
+  if (nextButton) nextButton.disabled = state.images.length < 2
+  if (downloadButton) downloadButton.disabled = false
+}
+
+function getPreviewImage() {
+  return state.previewImageIndex >= 0 ? state.images[state.previewImageIndex] : null
+}
+
+function showPreviousPreviewImage() {
+  if (!getPreviewImage() || state.images.length < 2) return
+
+  state.previewImageIndex =
+    (state.previewImageIndex - 1 + state.images.length) % state.images.length
+  renderImagePreview()
+}
+
+function showNextPreviewImage() {
+  if (!getPreviewImage() || state.images.length < 2) return
+
+  state.previewImageIndex = (state.previewImageIndex + 1) % state.images.length
+  renderImagePreview()
+}
+
+async function downloadPreviewImage() {
+  const previewImage = getPreviewImage()
+  if (!previewImage) return
+
+  try {
+    const response = await sendRuntimeMessage({
+      type: 'downloadImages',
+      images: [previewImage]
+    })
+
+    if (!response?.ok) {
+      throw new Error(response?.error || '下载失败')
+    }
+
+    updateStatus('已开始下载当前图片', 'success')
+  } catch (error) {
+    updateStatus(error.message || '下载失败', 'error')
+  }
 }
 
 function updateStatus(status, tone = 'info') {

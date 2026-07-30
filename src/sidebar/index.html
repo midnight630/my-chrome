@@ -51,6 +51,20 @@
       </button>
     </footer>
   </main>
+  <div id="image_preview" class="image_preview" hidden>
+    <div class="image_preview_backdrop" data-action="close-preview"></div>
+    <div class="image_preview_panel" role="dialog" aria-modal="true" aria-label="图片预览">
+      <button class="image_preview_close" type="button" data-action="close-preview" aria-label="关闭预览">×</button>
+      <div class="image_preview_toolbar">
+        <span id="image_preview_counter" class="image_preview_counter"></span>
+        <button type="button" data-action="download-preview">下载当前</button>
+      </div>
+      <button class="image_preview_nav image_preview_prev" type="button" data-action="previous-preview" aria-label="上一张">‹</button>
+      <img id="image_preview_img" alt="" />
+      <button class="image_preview_nav image_preview_next" type="button" data-action="next-preview" aria-label="下一张">›</button>
+      <div id="image_preview_caption" class="image_preview_caption"></div>
+    </div>
+  </div>
   <script src="./scripts.js"></script>
 </body>
 

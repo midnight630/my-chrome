@@ -1,6 +1,7 @@
 const DEFAULT_MAX_IMAGES = 500
 const DEFAULT_MAX_SCAN_NODES = 2500
 const DEFAULT_MIN_IMAGE_SIZE = 40
+const DEFAULT_MIN_DISPLAY_WIDTH = 100
 
 export const IMAGE_SELECTOR = [
   'img',
@@ -81,7 +82,8 @@ function createCollectContext(options) {
     window: options.window || window,
     maxImages: options.maxImages || DEFAULT_MAX_IMAGES,
     maxScanNodes: options.maxScanNodes || DEFAULT_MAX_SCAN_NODES,
-    minImageSize: options.minImageSize || DEFAULT_MIN_IMAGE_SIZE
+    minImageSize: options.minImageSize || DEFAULT_MIN_IMAGE_SIZE,
+    minDisplayWidth: options.minDisplayWidth || DEFAULT_MIN_DISPLAY_WIDTH
   }
 }
 
@@ -99,6 +101,7 @@ function collectImagesFromNodes(nodes, source, context) {
 
       const normalizedUrl = normalizeImageUrl(candidate.url, context)
       if (!normalizedUrl || seen.has(normalizedUrl)) continue
+      if (candidate.displayWidth <= context.minDisplayWidth) continue
       if (
         candidate.width < context.minImageSize &&
         candidate.height < context.minImageSize
@@ -125,6 +128,7 @@ function extractImageCandidates(node, context) {
     return getImageUrls(node).map((url) => ({
       url,
       alt: node.alt || '',
+      displayWidth: getDisplayWidth(node, rect, context),
       width: Math.round(node.naturalWidth || rect.width),
       height: Math.round(node.naturalHeight || rect.height)
     }))
@@ -140,6 +144,7 @@ function extractImageCandidates(node, context) {
     return parseSrcset(node.srcset).map((url) => ({
       url,
       alt: '',
+      displayWidth: 0,
       width: 0,
       height: 0
     }))
@@ -155,12 +160,30 @@ function extractImageCandidates(node, context) {
     return urls.map((url) => ({
       url,
       alt: node.getAttribute('aria-label') || '',
+      displayWidth: getDisplayWidth(node, rect, context),
       width: Math.round(rect.width),
       height: Math.round(rect.height)
     }))
   }
 
   return []
+}
+
+function getDisplayWidth(element, rect, context) {
+  const width = Math.round(rect.width)
+  if (width > 0) return width
+
+  const attributeWidth = Number(element.getAttribute('width'))
+  if (Number.isFinite(attributeWidth) && attributeWidth > 0) {
+    return Math.round(attributeWidth)
+  }
+
+  const cssWidth = Number.parseFloat(context.window.getComputedStyle(element).width)
+  if (Number.isFinite(cssWidth) && cssWidth > 0) {
+    return Math.round(cssWidth)
+  }
+
+  return Math.round(element.naturalWidth || 0)
 }
 
 function getImageUrls(image) {

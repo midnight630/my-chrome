@@ -222,10 +222,25 @@ button:disabled {
   text-align: right;
 }
 
-.image_item img {
+.image_preview_button {
   width: 72px;
   height: 72px;
+  padding: 0;
+  border: 0;
   border-radius: 6px;
+  background: transparent;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.image_preview_button:hover {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
+
+.image_preview_button img {
+  width: 72px;
+  height: 72px;
   object-fit: cover;
   background: #eef2f7;
 }
@@ -259,4 +274,117 @@ button:disabled {
 
 .download_button {
   width: 100%;
+}
+
+.image_preview {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.image_preview_backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.68);
+}
+
+.image_preview_panel {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 720px);
+  max-height: 88vh;
+  margin: 6vh auto 0;
+  padding: 3.25rem 3.25rem 1rem;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.image_preview_panel img {
+  max-width: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.image_preview_toolbar {
+  position: absolute;
+  top: 0.55rem;
+  left: 1rem;
+  right: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.image_preview_toolbar button {
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  background: #ffffff;
+  color: var(--text);
+}
+
+.image_preview_counter {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.image_preview_nav {
+  position: fixed;
+  top: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 2rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.image_preview_nav:hover {
+  background: #e5e7eb;
+}
+
+.image_preview_prev {
+  left: max(0.75rem, calc((100vw - 720px) / 2 + 0.75rem));
+}
+
+.image_preview_next {
+  right: max(0.75rem, calc((100vw - 720px) / 2 + 0.75rem));
+}
+
+.image_preview_caption {
+  width: 100%;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  word-break: break-all;
+  text-align: center;
+}
+
+.image_preview_close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.image_preview_close:hover {
+  background: #e5e7eb;
 }
