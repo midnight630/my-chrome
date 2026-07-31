@@ -452,8 +452,9 @@ async function sendActiveTabMessage(message) {
   const [tab] = await chrome.tabs.query({active: true, currentWindow: true})
   if (!tab?.id) throw new Error('没有找到当前活动页面')
 
-  if (!isScanableUrl(tab.url || tab.pendingUrl || '')) {
-    throw new Error('当前页面不支持识别，请切换到普通网页里的抖音或小红书内容页后重试')
+  const unsupportedPageMessage = getUnsupportedPageMessage(tab.url || tab.pendingUrl || '')
+  if (unsupportedPageMessage) {
+    throw new Error(unsupportedPageMessage)
   }
 
   try {
@@ -495,6 +496,18 @@ function escapeAttribute(value) {
   return escapeHtml(value)
 }
 
-function isScanableUrl(url) {
-  return /^https?:\/\//.test(url) || /^file:\/\//.test(url)
+function getUnsupportedPageMessage(url) {
+  if (/^chrome:\/\/newtab\/?(?:[?#].*)?$/.test(url)) {
+    return 'Chrome 新标签页不支持识别。请打开普通网页里的抖音或小红书等内容页后重试。'
+  }
+
+  if (/^(chrome|edge|brave|vivaldi|opera|about):/.test(url)) {
+    return '浏览器内置页面不支持识别。请切换到普通网页里的抖音或小红书等内容页后重试。'
+  }
+
+  if (/^https?:\/\//.test(url) || /^file:\/\//.test(url)) {
+    return ''
+  }
+
+  return '当前页面不支持识别。请切换到普通网页里的抖音或小红书等内容页后重试。'
 }
